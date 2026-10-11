@@ -1,0 +1,171 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.api
+    container_name: leadgen-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - mongo
+      - chroma
+    volumes:
+      - ./backend:/app
+      - api_logs:/app/logs
+    networks:
+      - leadgen-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.worker
+    container_name: leadgen-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - mongo
+      - chroma
+    volumes:
+      - ./backend:/app
+      - worker_logs:/app/logs
+    networks:
+      - leadgen-network
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4 -Q research,scraping,analysis,outreach,default
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.worker
+    container_name: leadgen-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./backend:/app
+    networks:
+      - leadgen-network
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+  flower:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.worker
+    container_name: leadgen-flower
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    networks:
+      - leadgen-network
+    command: celery -A app.workers.celery_app flower --port=5555
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: leadgen-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-leadgen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leadgen_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-leadgen}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - leadgen-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: leadgen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - leadgen-network
+
+  mongo:
+    image: mongo:7
+    container_name: leadgen-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-leadgen}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-mongo_secret}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - leadgen-network
+
+  chroma:
+    image: chromadb/chroma:0.5.0
+    container_name: leadgen-chroma
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - leadgen-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: leadgen-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - api
+    networks:
+      - leadgen-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: leadgen-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - leadgen-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
+  chroma_data:
+  api_logs:
+  worker_logs:
+
+networks:
+  leadgen-network:
+    driver: bridge

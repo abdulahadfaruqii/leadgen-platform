@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --background: #0f1117;
+  --surface: #161922;
+  --surface-hover: #1c1f2a;
+  --border: #252a36;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --primary: #6366f1;
+  --primary-glow: rgba(99,102,241,0.2);
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --accent-purple: #a855f7;
+  --accent-cyan: #06b6d4;
+  --accent-pink: #ec4899;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: rgba(22, 25, 34, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px var(--primary-glow);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  .btn-base {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-indigo-500 text-white hover:bg-indigo-400 hover:-translate-y-0.5;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  }
+
+  .btn-ghost {
+    @apply btn-base bg-transparent text-slate-400 border border-slate-700 hover:bg-slate-800 hover:text-slate-200;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm outline-none transition-all;
+  }
+
+  .input-base:focus {
+    @apply border-indigo-500;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  }
+
+  .tag-pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .score-high {
+    @apply bg-emerald-500/15 text-emerald-400;
+  }
+
+  .score-medium {
+    @apply bg-amber-500/15 text-amber-400;
+  }
+
+  .score-low {
+    @apply bg-red-500/15 text-red-400;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.2); }
+  50% { box-shadow: 0 0 40px rgba(99,102,241,0.4); }
+}

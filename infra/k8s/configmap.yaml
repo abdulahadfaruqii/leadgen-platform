@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: leadgen-config
+  namespace: leadgen
+data:
+  APP_ENV: "production"
+  DEBUG: "false"
+  API_V1_PREFIX: "/api/v1"
+  LOG_LEVEL: "INFO"

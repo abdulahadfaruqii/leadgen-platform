@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: leadgen-ingress
+  namespace: leadgen
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+    - hosts:
+        - api.leadgen-ai.com
+        - app.leadgen-ai.com
+      secretName: leadgen-tls
+  rules:
+    - host: api.leadgen-ai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: leadgen-api
+                port:
+                  number: 8000
+    - host: app.leadgen-ai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: leadgen-frontend
+                port:
+                  number: 3000
